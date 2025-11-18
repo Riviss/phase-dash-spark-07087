@@ -49,6 +49,57 @@ const Pick = () => {
         </div>
       </div>
 
+      {/* Event Info & Controls */}
+      <div className="flex items-center gap-6 border-b border-border bg-card px-4 py-2 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground">Event:</span>
+          <span className="font-mono-data font-medium">2024-01-15 14:23:42</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground">M</span>
+          <Badge variant="secondary" className="font-mono-data text-xs">
+            2.8
+          </Badge>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground">Depth:</span>
+          <span className="font-mono-data">4.2 km</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground">RMS:</span>
+          <span className="font-mono-data">0.12s</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground">Gap:</span>
+          <span className="font-mono-data">85°</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground">H-Err:</span>
+          <span className="font-mono-data">±0.8 km</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground">Z-Err:</span>
+          <span className="font-mono-data">±1.2 km</span>
+        </div>
+
+        <div className="ml-auto flex items-center gap-3">
+          <label className="flex cursor-pointer items-center gap-1.5">
+            <input type="checkbox" className="h-3 w-3 rounded" defaultChecked />
+            <span className="text-muted-foreground">Theoretical</span>
+          </label>
+
+          <Button variant="outline" size="sm" className="h-7 text-xs">
+            Relocate
+          </Button>
+        </div>
+      </div>
+
       {/* Main Editor Area */}
       <ResizablePanelGroup direction="horizontal" className="flex-1">
         {/* Events Rail */}
