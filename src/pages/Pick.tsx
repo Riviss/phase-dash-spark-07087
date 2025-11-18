@@ -4,6 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import TrackStack from "@/components/pick/TrackStack";
 import PickInspector from "@/components/pick/PickInspector";
+import EventsRail from "@/components/pick/EventsRail";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
 
 const Pick = () => {
   return (
@@ -44,15 +50,28 @@ const Pick = () => {
       </div>
 
       {/* Main Editor Area */}
-      <div className="flex flex-1 overflow-hidden">
+      <ResizablePanelGroup direction="horizontal" className="flex-1">
+        {/* Events Rail */}
+        <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+          <EventsRail />
+        </ResizablePanel>
+
+        <ResizableHandle />
+
         {/* Track Stack */}
-        <div className="flex-1 overflow-auto">
-          <TrackStack />
-        </div>
+        <ResizablePanel defaultSize={60}>
+          <div className="h-full overflow-auto">
+            <TrackStack />
+          </div>
+        </ResizablePanel>
+
+        <ResizableHandle />
 
         {/* Right Inspector */}
-        <PickInspector />
-      </div>
+        <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+          <PickInspector />
+        </ResizablePanel>
+      </ResizablePanelGroup>
 
       {/* Transport Controls */}
       <div className="flex items-center gap-4 border-t border-border bg-transport px-4 py-3">
