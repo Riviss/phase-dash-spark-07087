@@ -17,6 +17,7 @@ import {
 const Pick = () => {
   const [selectedPhase, setSelectedPhase] = useState<PhaseType>("P");
   const [picks, setPicks] = useState<Record<string, PhasePick[]>>({});
+  const [onePickMode, setOnePickMode] = useState(true);
 
   const handleAddPick = (trackId: string, position: number) => {
     const newPick: PhasePick = {
@@ -28,9 +29,16 @@ const Pick = () => {
     console.log("Adding pick:", { trackId, position, selectedPhase, newPick });
     
     setPicks((prev) => {
+      const existingPicks = prev[trackId] || [];
+      
+      // If one pick mode is enabled, filter out existing picks of the same type
+      const filteredPicks = onePickMode
+        ? existingPicks.filter(pick => pick.type !== selectedPhase)
+        : existingPicks;
+      
       const updated = {
         ...prev,
-        [trackId]: [...(prev[trackId] || []), newPick],
+        [trackId]: [...filteredPicks, newPick],
       };
       console.log("Updated picks state:", updated);
       return updated;
@@ -136,6 +144,16 @@ const Pick = () => {
           <label className="flex cursor-pointer items-center gap-1.5">
             <input type="checkbox" className="h-3 w-3 rounded" defaultChecked />
             <span className="text-muted-foreground">Theoretical</span>
+          </label>
+
+          <label className="flex cursor-pointer items-center gap-1.5">
+            <input 
+              type="checkbox" 
+              className="h-3 w-3 rounded" 
+              checked={onePickMode}
+              onChange={(e) => setOnePickMode(e.target.checked)}
+            />
+            <span className="text-muted-foreground">One Pick Mode</span>
           </label>
 
           <Button variant="outline" size="sm" className="h-7 text-xs">
