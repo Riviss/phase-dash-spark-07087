@@ -21,10 +21,13 @@ const phaseColors = {
 };
 
 const TrackRow = ({ track, picks = [], onAddPick }: TrackRowProps) => {
+  console.log(`TrackRow ${track.id} received picks:`, picks);
+  
   const handleWaveformClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!onAddPick) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const position = ((e.clientX - rect.left) / rect.width) * 100;
+    console.log("Waveform clicked:", { trackId: track.id, position });
     onAddPick(track.id, position);
   };
 
