@@ -25,10 +25,16 @@ const Pick = () => {
       id: `${trackId}-${selectedPhase}-${Date.now()}`,
     };
     
-    setPicks((prev) => ({
-      ...prev,
-      [trackId]: [...(prev[trackId] || []), newPick],
-    }));
+    console.log("Adding pick:", { trackId, position, selectedPhase, newPick });
+    
+    setPicks((prev) => {
+      const updated = {
+        ...prev,
+        [trackId]: [...(prev[trackId] || []), newPick],
+      };
+      console.log("Updated picks state:", updated);
+      return updated;
+    });
   };
 
   // Keyboard shortcuts
