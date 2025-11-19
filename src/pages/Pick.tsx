@@ -7,6 +7,7 @@ import TrackStack from "@/components/pick/TrackStack";
 import PickInspector from "@/components/pick/PickInspector";
 import EventsRail from "@/components/pick/EventsRail";
 import PhasePicker, { PhaseType } from "@/components/pick/PhasePicker";
+import FilterControl, { FilterPreset } from "@/components/pick/FilterControl";
 import { PhasePick } from "@/components/pick/TrackRow";
 import {
   ResizablePanelGroup,
@@ -18,6 +19,7 @@ const Pick = () => {
   const [selectedPhase, setSelectedPhase] = useState<PhaseType>("P");
   const [picks, setPicks] = useState<Record<string, PhasePick[]>>({});
   const [onePickMode, setOnePickMode] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<FilterPreset | null>(null);
 
   const handleAddPick = (trackId: string, position: number) => {
     const newPick: PhasePick = {
@@ -81,6 +83,8 @@ const Pick = () => {
             EQTransformer v2.1
           </Badge>
         </div>
+
+        <FilterControl onFilterChange={setActiveFilter} />
 
         <div className="ml-auto flex items-center gap-2">
           <span className="text-xs text-muted-foreground">View:</span>
