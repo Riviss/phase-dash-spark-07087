@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Play, Pause, SkipBack, SkipForward, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -5,6 +6,8 @@ import { Slider } from "@/components/ui/slider";
 import TrackStack from "@/components/pick/TrackStack";
 import PickInspector from "@/components/pick/PickInspector";
 import EventsRail from "@/components/pick/EventsRail";
+import PhasePicker, { PhaseType } from "@/components/pick/PhasePicker";
+import { PhasePick } from "@/components/pick/TrackRow";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -12,6 +15,36 @@ import {
 } from "@/components/ui/resizable";
 
 const Pick = () => {
+  const [selectedPhase, setSelectedPhase] = useState<PhaseType>("P");
+  const [picks, setPicks] = useState<Record<string, PhasePick[]>>({});
+
+  const handleAddPick = (trackId: string, position: number) => {
+    const newPick: PhasePick = {
+      type: selectedPhase,
+      position,
+      id: `${trackId}-${selectedPhase}-${Date.now()}`,
+    };
+    
+    setPicks((prev) => ({
+      ...prev,
+      [trackId]: [...(prev[trackId] || []), newPick],
+    }));
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === "1") {
+        setSelectedPhase("P");
+      } else if (e.key === "2") {
+        setSelectedPhase("S");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, []);
+
   return (
     <div className="flex h-full flex-col">
       {/* Top Control Bar */}
@@ -89,6 +122,11 @@ const Pick = () => {
         </div>
 
         <div className="ml-auto flex items-center gap-3">
+          <PhasePicker
+            selectedPhase={selectedPhase}
+            onPhaseSelect={setSelectedPhase}
+          />
+
           <label className="flex cursor-pointer items-center gap-1.5">
             <input type="checkbox" className="h-3 w-3 rounded" defaultChecked />
             <span className="text-muted-foreground">Theoretical</span>
@@ -112,7 +150,7 @@ const Pick = () => {
         {/* Track Stack */}
         <ResizablePanel defaultSize={60}>
           <div className="h-full overflow-auto">
-            <TrackStack />
+            <TrackStack picks={picks} onAddPick={handleAddPick} />
           </div>
         </ResizablePanel>
 

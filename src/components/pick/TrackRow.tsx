@@ -1,3 +1,9 @@
+export interface PhasePick {
+  type: "P" | "S";
+  position: number; // percentage 0-100
+  id: string;
+}
+
 interface TrackRowProps {
   track: {
     id: string;
@@ -5,11 +11,25 @@ interface TrackRowProps {
     network: string;
     channel: string;
   };
+  picks?: PhasePick[];
+  onAddPick?: (trackId: string, position: number) => void;
 }
 
-const TrackRow = ({ track }: TrackRowProps) => {
+const phaseColors = {
+  P: "hsl(var(--rail-p))",
+  S: "hsl(var(--rail-s))",
+};
+
+const TrackRow = ({ track, picks = [], onAddPick }: TrackRowProps) => {
+  const handleWaveformClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!onAddPick) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const position = ((e.clientX - rect.left) / rect.width) * 100;
+    onAddPick(track.id, position);
+  };
+
   return (
-    <div className="flex h-24 items-stretch">
+    <div className="flex h-24 items-stretch relative">
       {/* Track Label */}
       <div className="flex w-32 flex-col justify-center border-r border-track-divider bg-card px-3">
         <div className="font-mono-data text-xs font-semibold">
@@ -23,7 +43,10 @@ const TrackRow = ({ track }: TrackRowProps) => {
       {/* Waveform + Rails Area */}
       <div className="relative flex-1">
         {/* Waveform Lane */}
-        <div className="h-14 overflow-hidden bg-muted/10">
+        <div
+          className="h-14 overflow-hidden bg-muted/10 cursor-crosshair relative"
+          onClick={handleWaveformClick}
+        >
           <svg
             width="100%"
             height="100%"
@@ -38,8 +61,33 @@ const TrackRow = ({ track }: TrackRowProps) => {
                 const y = 28 + Math.sin(i / 20) * 20 + Math.random() * 3;
                 return `${i},${y}`;
               }).join(" ")}
-            />
+          />
           </svg>
+
+          {/* Phase Pick Markers */}
+          {picks.map((pick) => (
+            <div
+              key={pick.id}
+              className="absolute top-0 h-full pointer-events-none"
+              style={{ left: `${pick.position}%` }}
+            >
+              {/* Vertical line */}
+              <div
+                className="absolute top-0 h-full w-0.5 opacity-90"
+                style={{ backgroundColor: phaseColors[pick.type] }}
+              />
+              {/* Flag */}
+              <div
+                className="absolute top-1 -translate-x-1/2 flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px] font-mono-data font-semibold shadow-sm"
+                style={{
+                  backgroundColor: phaseColors[pick.type],
+                  color: "hsl(var(--background))",
+                }}
+              >
+                {pick.type}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* P Rail */}
