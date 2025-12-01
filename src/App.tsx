@@ -8,6 +8,7 @@ import Live from "./pages/Live";
 import Pick from "./pages/Pick";
 import QC from "./pages/QC";
 import Events from "./pages/Events";
+import EventDetail from "./pages/EventDetail";
 import Setup from "./pages/Setup";
 import Logs from "./pages/Logs";
 import Help from "./pages/Help";
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/pick" element={<Pick />} />
             <Route path="/qc" element={<QC />} />
             <Route path="/events" element={<Events />} />
+            <Route path="/events/:eventId" element={<EventDetail />} />
             <Route path="/setup" element={<Setup />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="/help" element={<Help />} />
