@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AreaProvider, AREAS_STORAGE_KEY } from "@/contexts/AreaContext";
+import { AreaConfigProvider } from "@/contexts/AreaConfigContext";
 import AppLayout from "./components/layout/AppLayout";
 import Live from "./pages/Live";
 import Pick from "./pages/Pick";
@@ -39,22 +40,24 @@ const App = () => (
     <TooltipProvider>
       <BrowserRouter>
         <AreaProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route element={<AppLayout />}>
-              <Route path="/" element={<HomeRedirect />} />
-              <Route path="/live" element={<Live />} />
-              <Route path="/pick" element={<Pick />} />
-              <Route path="/qc" element={<QC />} />
-              <Route path="/events" element={<Events />} />
-              <Route path="/events/:eventId" element={<EventDetail />} />
-              <Route path="/setup" element={<Setup />} />
-              <Route path="/logs" element={<Logs />} />
-              <Route path="/help" element={<Help />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
+          <AreaConfigProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<HomeRedirect />} />
+                <Route path="/live" element={<Live />} />
+                <Route path="/pick" element={<Pick />} />
+                <Route path="/qc" element={<QC />} />
+                <Route path="/events" element={<Events />} />
+                <Route path="/events/:eventId" element={<EventDetail />} />
+                <Route path="/setup" element={<Setup />} />
+                <Route path="/logs" element={<Logs />} />
+                <Route path="/help" element={<Help />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </AreaConfigProvider>
         </AreaProvider>
       </BrowserRouter>
     </TooltipProvider>
