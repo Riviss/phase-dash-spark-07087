@@ -1,4 +1,5 @@
 import { Activity, ChevronDown, Command, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -7,11 +8,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAreas } from "@/contexts/AreaContext";
 
 const TopBar = () => {
+  const navigate = useNavigate();
+  const { areas, selectedAreaId, selectedArea, setSelectedAreaId } = useAreas();
+
   const handleCommandPalette = () => {
-    // Command palette trigger (⇧⌘P)
     console.log("Command palette");
+  };
+
+  const handleManageAreas = () => {
+    navigate("/setup?tab=areas");
   };
 
   return (
@@ -25,19 +33,26 @@ const TopBar = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-1 text-xs">
-              <span className="font-mono-data">WCSB</span>
+              <span className="font-mono-data">
+                {selectedArea?.name || "Select Area"}
+              </span>
               <ChevronDown className="h-3 w-3" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem>
-              <span className="font-mono-data">WCSB</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <span className="font-mono-data">Area 2</span>
-            </DropdownMenuItem>
+            {areas.map((area) => (
+              <DropdownMenuItem
+                key={area.id}
+                onClick={() => setSelectedAreaId(area.id)}
+                className={selectedAreaId === area.id ? "bg-accent" : ""}
+              >
+                <span className="font-mono-data">{area.name}</span>
+              </DropdownMenuItem>
+            ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Manage Areas...</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleManageAreas}>
+              Manage Areas...
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

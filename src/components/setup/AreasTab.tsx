@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,16 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Plus, Trash2, Server, Edit, MapPin } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-
-interface Area {
-  id: string;
-  name: string;
-  minLat: string;
-  maxLat: string;
-  minLon: string;
-  maxLon: string;
-  networks: string[];
-}
+import { useAreas, Area } from "@/contexts/AreaContext";
 
 interface SeedlinkServer {
   id: string;
@@ -36,19 +27,6 @@ interface StationConfig {
   areaId: string;
 }
 
-const AREAS_STORAGE_KEY = "seismic-areas";
-const SELECTED_AREA_KEY = "seismic-selected-area";
-
-const defaultArea: Area = {
-  id: "wcsb",
-  name: "Western Canada Sedimentary Basin",
-  minLat: "48.0",
-  maxLat: "52.0",
-  minLon: "-120.0",
-  maxLon: "-108.0",
-  networks: ["PQ", "XL", "EO"],
-};
-
 const mockSeedlinkServers: SeedlinkServer[] = [
   { id: "sl1", name: "Primary IRIS", host: "rtserve.iris.washington.edu", port: 18000, areaId: "wcsb" },
   { id: "sl2", name: "Local Ringserver", host: "localhost", port: 16000, areaId: "wcsb" },
@@ -63,14 +41,16 @@ const mockStations: StationConfig[] = [
 ];
 
 const AreasTab = () => {
-  const [areas, setAreas] = useState<Area[]>(() => {
-    const stored = localStorage.getItem(AREAS_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [defaultArea];
-  });
-  
-  const [selectedAreaId, setSelectedAreaId] = useState<string>(() => {
-    return localStorage.getItem(SELECTED_AREA_KEY) || areas[0]?.id || "";
-  });
+  const { 
+    areas, 
+    selectedAreaId, 
+    selectedArea, 
+    setSelectedAreaId, 
+    addArea, 
+    updateArea, 
+    deleteArea, 
+    isDuplicateName 
+  } = useAreas();
 
   const [seedlinkServers, setSeedlinkServers] = useState<SeedlinkServer[]>(mockSeedlinkServers);
   const [stations, setStations] = useState<StationConfig[]>(mockStations);
@@ -90,26 +70,7 @@ const AreasTab = () => {
   const [editingArea, setEditingArea] = useState<Area | null>(null);
   const [networkInput, setNetworkInput] = useState("");
 
-  // Persist areas to localStorage
-  useEffect(() => {
-    localStorage.setItem(AREAS_STORAGE_KEY, JSON.stringify(areas));
-  }, [areas]);
-
-  // Persist selected area
-  useEffect(() => {
-    localStorage.setItem(SELECTED_AREA_KEY, selectedAreaId);
-  }, [selectedAreaId]);
-
-  const selectedArea = areas.find(a => a.id === selectedAreaId);
-
-  const isDuplicateName = (name: string, excludeId?: string): boolean => {
-    return areas.some(a => 
-      a.name.toLowerCase().trim() === name.toLowerCase().trim() && 
-      a.id !== excludeId
-    );
-  };
-
-  const addArea = () => {
+  const handleAddArea = () => {
     if (!newArea.name.trim()) {
       toast({ title: "Error", description: "Area name is required", variant: "destructive" });
       return;
@@ -120,18 +81,15 @@ const AreasTab = () => {
       return;
     }
 
-    const id = newArea.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    const area: Area = { ...newArea, id: `${id}-${Date.now()}` };
-    
-    setAreas([...areas, area]);
-    setSelectedAreaId(area.id);
-    setNewArea({ name: "", minLat: "", maxLat: "", minLon: "", maxLon: "", networks: [] });
-    setIsAddAreaOpen(false);
-    
-    toast({ title: "Area added", description: `${area.name} has been created` });
+    const area = addArea(newArea);
+    if (area) {
+      setNewArea({ name: "", minLat: "", maxLat: "", minLon: "", maxLon: "", networks: [] });
+      setIsAddAreaOpen(false);
+      toast({ title: "Area added", description: `${area.name} has been created` });
+    }
   };
 
-  const updateArea = () => {
+  const handleUpdateArea = () => {
     if (!editingArea) return;
     
     if (!editingArea.name.trim()) {
@@ -144,28 +102,23 @@ const AreasTab = () => {
       return;
     }
 
-    setAreas(areas.map(a => a.id === editingArea.id ? editingArea : a));
-    setIsEditAreaOpen(false);
-    setEditingArea(null);
-    
-    toast({ title: "Area updated", description: `${editingArea.name} has been updated` });
+    if (updateArea(editingArea)) {
+      setIsEditAreaOpen(false);
+      setEditingArea(null);
+      toast({ title: "Area updated", description: `${editingArea.name} has been updated` });
+    }
   };
 
-  const deleteArea = (id: string) => {
+  const handleDeleteArea = (id: string) => {
+    const areaToDelete = areas.find(a => a.id === id);
     if (areas.length <= 1) {
       toast({ title: "Error", description: "Cannot delete the last area", variant: "destructive" });
       return;
     }
     
-    const areaToDelete = areas.find(a => a.id === id);
-    setAreas(areas.filter(a => a.id !== id));
-    
-    if (selectedAreaId === id) {
-      const remaining = areas.filter(a => a.id !== id);
-      setSelectedAreaId(remaining[0]?.id || "");
+    if (deleteArea(id)) {
+      toast({ title: "Area deleted", description: `${areaToDelete?.name} has been removed` });
     }
-    
-    toast({ title: "Area deleted", description: `${areaToDelete?.name} has been removed` });
   };
 
   const openEditDialog = (area: Area) => {
@@ -303,7 +256,7 @@ const AreasTab = () => {
                   <DialogClose asChild>
                     <Button variant="outline">Cancel</Button>
                   </DialogClose>
-                  <Button onClick={addArea}>Add Area</Button>
+                  <Button onClick={handleAddArea}>Add Area</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -335,7 +288,7 @@ const AreasTab = () => {
                     variant="ghost"
                     size="sm"
                     className="h-6 w-6 p-0 text-destructive"
-                    onClick={(e) => { e.stopPropagation(); deleteArea(area.id); }}
+                    onClick={(e) => { e.stopPropagation(); handleDeleteArea(area.id); }}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -425,7 +378,7 @@ const AreasTab = () => {
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button onClick={updateArea}>Save Changes</Button>
+            <Button onClick={handleUpdateArea}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -462,52 +415,16 @@ const AreasTab = () => {
         </Card>
       )}
 
-      {/* Seedlink Servers */}
+      {/* Seedlink Servers - Area Specific */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Server className="h-5 w-5" />
-            Seedlink Servers
+            Seedlink Servers {selectedArea && <Badge variant="outline">{selectedArea.name}</Badge>}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Host</TableHead>
-                <TableHead>Port</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredServers.map((server) => (
-                <TableRow key={server.id}>
-                  <TableCell className="font-medium">{server.name}</TableCell>
-                  <TableCell className="font-mono-data">{server.host}</TableCell>
-                  <TableCell className="font-mono-data">{server.port}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeSeedlinkServer(server.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filteredServers.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    No seedlink servers configured for this area
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-
-          <div className="flex gap-2 border-t border-border pt-4">
+          <div className="flex gap-2">
             <Input
               placeholder="Server name"
               value={newServer.name}
@@ -518,27 +435,65 @@ const AreasTab = () => {
               placeholder="Host"
               value={newServer.host}
               onChange={(e) => setNewServer({ ...newServer, host: e.target.value })}
-              className="flex-1 font-mono-data"
+              className="flex-1"
             />
             <Input
               type="number"
               placeholder="Port"
               value={newServer.port}
-              onChange={(e) => setNewServer({ ...newServer, port: parseInt(e.target.value) })}
-              className="w-24 font-mono-data"
+              onChange={(e) => setNewServer({ ...newServer, port: parseInt(e.target.value) || 18000 })}
+              className="w-24"
             />
             <Button onClick={addSeedlinkServer} size="sm">
-              <Plus className="mr-1 h-4 w-4" />
-              Add
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Host</TableHead>
+                <TableHead>Port</TableHead>
+                <TableHead className="w-12"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredServers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    No servers configured for this area
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredServers.map((server) => (
+                  <TableRow key={server.id}>
+                    <TableCell className="font-medium">{server.name}</TableCell>
+                    <TableCell className="font-mono-data">{server.host}</TableCell>
+                    <TableCell className="font-mono-data">{server.port}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeSeedlinkServer(server.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
-      {/* Station Configuration */}
+      {/* Station Assignments - Area Specific */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Station Configuration</CardTitle>
+          <CardTitle className="text-lg">
+            Station Assignments {selectedArea && <Badge variant="outline">{selectedArea.name}</Badge>}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -551,64 +506,40 @@ const AreasTab = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredStations.map((station, index) => (
-                <TableRow key={`${station.network}.${station.station}`}>
-                  <TableCell className="font-mono-data">{station.network}</TableCell>
-                  <TableCell className="font-mono-data">{station.station}</TableCell>
-                  <TableCell className="font-mono-data">{station.channels}</TableCell>
-                  <TableCell>
-                    <Select
-                      value={station.seedlinkId}
-                      onValueChange={(value) => updateStationSeedlink(index, value)}
-                    >
-                      <SelectTrigger className="w-[200px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {filteredServers.map((server) => (
-                          <SelectItem key={server.id} value={server.id}>
-                            {server.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filteredStations.length === 0 && (
+              {filteredStations.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-muted-foreground">
                     No stations configured for this area
                   </TableCell>
                 </TableRow>
+              ) : (
+                filteredStations.map((station, idx) => (
+                  <TableRow key={`${station.network}-${station.station}`}>
+                    <TableCell className="font-mono-data">{station.network}</TableCell>
+                    <TableCell className="font-mono-data">{station.station}</TableCell>
+                    <TableCell className="font-mono-data">{station.channels}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={station.seedlinkId}
+                        onValueChange={(value) => updateStationSeedlink(idx, value)}
+                      >
+                        <SelectTrigger className="w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {filteredServers.map((server) => (
+                            <SelectItem key={server.id} value={server.id}>
+                              {server.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>
-
-          <div className="mt-4 flex gap-2">
-            <Button variant="outline" size="sm">
-              <Plus className="mr-1 h-4 w-4" />
-              Add Station
-            </Button>
-            <Button variant="outline" size="sm">Import from FDSN</Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Station Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Station Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4 flex items-center gap-4">
-            <Badge variant="outline" className="font-mono-data">{filteredStations.length} stations configured</Badge>
-            <Badge variant="outline" className="font-mono-data">{filteredServers.length} seedlink servers</Badge>
-          </div>
-          <div className="h-64 rounded bg-muted/30" />
-          <p className="mt-2 text-xs text-muted-foreground">
-            Station map with clustered markers and selection brush
-          </p>
         </CardContent>
       </Card>
     </div>
