@@ -213,6 +213,7 @@ const Pick = () => {
               channelFilter={channelFilter}
               showTheoreticals={showTheoreticals}
               threshold={threshold}
+              activeFilter={activeFilter}
             />
           </div>
         </ResizablePanel>

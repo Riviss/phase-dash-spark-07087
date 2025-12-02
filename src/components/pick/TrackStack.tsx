@@ -1,5 +1,6 @@
 import TrackRow, { PhasePick, ChannelFilter } from "./TrackRow";
 import StationGroup from "./StationGroup";
+import { FilterPreset } from "./FilterControl";
 
 const mockTracks = Array.from({ length: 12 }, (_, i) => {
   const stationIdx = Math.floor(i / 3);
@@ -18,9 +19,10 @@ interface TrackStackProps {
   channelFilter: ChannelFilter;
   showTheoreticals: boolean;
   threshold: number;
+  activeFilter: FilterPreset | null;
 }
 
-const TrackStack = ({ picks, onAddPick, channelFilter, showTheoreticals, threshold }: TrackStackProps) => {
+const TrackStack = ({ picks, onAddPick, channelFilter, showTheoreticals, threshold, activeFilter }: TrackStackProps) => {
   // Filter tracks based on channel selection
   const filteredTracks = mockTracks.filter((track) => {
     if (channelFilter === "All") return true;
@@ -61,6 +63,7 @@ const TrackStack = ({ picks, onAddPick, channelFilter, showTheoreticals, thresho
               showTheoreticals={showTheoreticals}
               threshold={threshold}
               onAddPick={onAddPick}
+              activeFilter={activeFilter}
             />
             {index < groups.length - 1 && (
               <div className="h-[1px] bg-track-divider" />
@@ -82,6 +85,7 @@ const TrackStack = ({ picks, onAddPick, channelFilter, showTheoreticals, thresho
             onAddPick={onAddPick}
             showTheoreticals={showTheoreticals}
             threshold={threshold}
+            activeFilter={activeFilter}
           />
           {index < filteredTracks.length - 1 && (
             <div className="h-[1px] bg-track-divider" />
