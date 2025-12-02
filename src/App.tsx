@@ -37,10 +37,10 @@ const HomeRedirect = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AreaProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <BrowserRouter>
+        <AreaProvider>
+          <Toaster />
+          <Sonner />
           <Routes>
             <Route element={<AppLayout />}>
               <Route path="/" element={<HomeRedirect />} />
@@ -55,8 +55,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
-        </BrowserRouter>
-      </AreaProvider>
+        </AreaProvider>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
