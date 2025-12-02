@@ -71,25 +71,14 @@ const StationGroup = ({
   const probs = probabilities || generateMockProbabilities(seed);
   const theo = theoreticals || generateMockTheoreticals(seed);
 
-  // Aggregate all picks for this station (from any track)
-  const stationPicks = tracks.reduce((acc, track) => {
-    const trackPicks = picks[track.id] || [];
-    trackPicks.forEach(pick => {
-      // Use position + type as key to avoid duplicates
-      const key = `${pick.type}-${Math.round(pick.position)}`;
-      if (!acc.has(key)) {
-        acc.set(key, pick);
-      }
-    });
-    return acc;
-  }, new Map<string, { type: "P" | "S"; position: number; id: string }>());
-
-  const aggregatedPicks = Array.from(stationPicks.values());
-
-  const handleWaveformClick = (trackId: string) => (e: React.MouseEvent<HTMLDivElement>) => {
+  // Station key for picks - all tracks in station share picks
+  const stationKey = `${network}.${station}`;
+  const stationPicks = picks[stationKey] || [];
+  
+  const handleWaveformClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const position = ((e.clientX - rect.left) / rect.width) * 100;
-    onAddPick(trackId, position);
+    onAddPick(stationKey, position);
   };
 
   const renderProbabilityCurve = (data: number[], color: string, phase: "P" | "S") => {
@@ -180,7 +169,7 @@ const StationGroup = ({
               key={track.id}
               className={`relative overflow-hidden bg-muted/10 cursor-crosshair ${idx > 0 ? 'border-t border-track-divider/50' : ''}`}
               style={{ height: `${waveformHeight * 4}px` }}
-              onClick={handleWaveformClick(track.id)}
+              onClick={handleWaveformClick}
             >
               {/* Channel label */}
               <div className="absolute left-1 top-0.5 font-mono-data text-[9px] text-muted-foreground/60 z-10">
@@ -205,7 +194,7 @@ const StationGroup = ({
               </svg>
 
               {/* Phase Pick Markers - aligned across all channels */}
-              {aggregatedPicks.map((pick) => (
+              {stationPicks.map((pick) => (
                 <div
                   key={pick.id}
                   className="absolute top-0 h-full pointer-events-none"
