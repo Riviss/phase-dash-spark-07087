@@ -3,11 +3,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { useAreas } from "@/contexts/AreaContext";
+import { useAreaConfig } from "@/contexts/AreaConfigContext";
+import CopyConfigDialog from "./CopyConfigDialog";
 
 const DataSourcesTab = () => {
+  const { selectedAreaId, selectedArea } = useAreas();
+  const { getConfig, updateDataSourceConfig } = useAreaConfig();
+  
+  const config = getConfig(selectedAreaId).dataSources;
+
+  const handleSave = () => {
+    toast({ title: "Settings saved", description: `Data source settings saved for ${selectedArea?.name}` });
+  };
+
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <Badge variant="outline" className="text-sm">
+          {selectedArea?.name || "No area selected"}
+        </Badge>
+        <CopyConfigDialog />
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Ringserver Configuration</CardTitle>
@@ -18,7 +38,8 @@ const DataSourcesTab = () => {
               <Label htmlFor="ringserver-host">Host</Label>
               <Input
                 id="ringserver-host"
-                defaultValue="rtserve.iris.washington.edu:18000"
+                value={config.ringserverHost}
+                onChange={(e) => updateDataSourceConfig(selectedAreaId, { ringserverHost: e.target.value })}
                 className="font-mono-data"
               />
             </div>
@@ -27,7 +48,8 @@ const DataSourcesTab = () => {
               <Input
                 id="ring-size"
                 type="number"
-                defaultValue="2"
+                value={config.ringSize}
+                onChange={(e) => updateDataSourceConfig(selectedAreaId, { ringSize: parseInt(e.target.value) || 0 })}
                 className="font-mono-data"
               />
             </div>
@@ -39,7 +61,8 @@ const DataSourcesTab = () => {
               <Input
                 id="max-clients"
                 type="number"
-                defaultValue="10"
+                value={config.maxClients}
+                onChange={(e) => updateDataSourceConfig(selectedAreaId, { maxClients: parseInt(e.target.value) || 0 })}
                 className="font-mono-data"
               />
             </div>
@@ -48,7 +71,8 @@ const DataSourcesTab = () => {
               <Input
                 id="port"
                 type="number"
-                defaultValue="18000"
+                value={config.port}
+                onChange={(e) => updateDataSourceConfig(selectedAreaId, { port: parseInt(e.target.value) || 0 })}
                 className="font-mono-data"
               />
             </div>
@@ -58,7 +82,8 @@ const DataSourcesTab = () => {
             <Label htmlFor="ntp-server">NTP Server</Label>
             <Input
               id="ntp-server"
-              defaultValue="time.google.com"
+              value={config.ntpServer}
+              onChange={(e) => updateDataSourceConfig(selectedAreaId, { ntpServer: e.target.value })}
               className="font-mono-data"
             />
           </div>
@@ -80,7 +105,7 @@ const DataSourcesTab = () => {
             <Button variant="outline" size="sm">
               List Streams
             </Button>
-            <Button size="sm">Save Changes</Button>
+            <Button size="sm" onClick={handleSave}>Save Changes</Button>
           </div>
         </CardContent>
       </Card>
@@ -94,7 +119,8 @@ const DataSourcesTab = () => {
             <Label htmlFor="fs-path">File System Path Template</Label>
             <Input
               id="fs-path"
-              defaultValue="/home/pgcseiscomp/antelope/wfs/{year}/{month}/{day}/{yearmonthday}.{network}.{station}..{channel}.mseed"
+              value={config.fsPathTemplate}
+              onChange={(e) => updateDataSourceConfig(selectedAreaId, { fsPathTemplate: e.target.value })}
               className="font-mono-data text-xs"
             />
             <p className="text-xs text-muted-foreground">
@@ -118,7 +144,8 @@ const DataSourcesTab = () => {
             <Input
               id="target-rate"
               type="number"
-              defaultValue="100"
+              value={config.targetSampleRate}
+              onChange={(e) => updateDataSourceConfig(selectedAreaId, { targetSampleRate: parseInt(e.target.value) || 100 })}
               className="font-mono-data"
             />
             <p className="text-xs text-muted-foreground">
