@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
 import Live from "./pages/Live";
 import Pick from "./pages/Pick";
@@ -14,7 +14,26 @@ import Logs from "./pages/Logs";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 
+const AREAS_STORAGE_KEY = "seismic-areas";
+
 const queryClient = new QueryClient();
+
+// Check if areas are configured
+const hasAreas = (): boolean => {
+  const stored = localStorage.getItem(AREAS_STORAGE_KEY);
+  if (!stored) return false;
+  try {
+    const areas = JSON.parse(stored);
+    return Array.isArray(areas) && areas.length > 0;
+  } catch {
+    return false;
+  }
+};
+
+// Redirect to setup if no areas configured
+const HomeRedirect = () => {
+  return hasAreas() ? <Live /> : <Navigate to="/setup" replace />;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -24,7 +43,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<Live />} />
+            <Route path="/" element={<HomeRedirect />} />
             <Route path="/live" element={<Live />} />
             <Route path="/pick" element={<Pick />} />
             <Route path="/qc" element={<QC />} />
