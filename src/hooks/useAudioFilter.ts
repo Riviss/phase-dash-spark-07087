@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from "react";
+import { useCallback } from "react";
 
 export interface FilterSettings {
   centerFreq: number;
@@ -7,36 +7,6 @@ export interface FilterSettings {
 }
 
 export const useAudioFilter = (sampleRate: number = 100) => {
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const filterRef = useRef<BiquadFilterNode | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-
-  useEffect(() => {
-    // Initialize Web Audio context
-    audioCtxRef.current = new AudioContext({ sampleRate });
-    filterRef.current = audioCtxRef.current.createBiquadFilter();
-    analyserRef.current = audioCtxRef.current.createAnalyser();
-
-    filterRef.current.type = "bandpass";
-    filterRef.current.connect(analyserRef.current);
-
-    return () => {
-      audioCtxRef.current?.close();
-    };
-  }, [sampleRate]);
-
-  const updateFilter = useCallback((settings: FilterSettings) => {
-    if (!filterRef.current) return;
-
-    const lowFreq = Math.max(0.1, settings.centerFreq - settings.bandwidth);
-    const highFreq = settings.centerFreq + settings.bandwidth;
-    const centerFreq = (lowFreq + highFreq) / 2;
-    const Q = centerFreq / (highFreq - lowFreq);
-
-    filterRef.current.frequency.value = centerFreq;
-    filterRef.current.Q.value = Math.max(0.1, Q);
-  }, []);
-
   // Simple IIR bandpass filter for processing data arrays
   const applyBandpassFilter = useCallback(
     (data: number[], settings: FilterSettings): number[] => {
@@ -78,7 +48,6 @@ export const useAudioFilter = (sampleRate: number = 100) => {
   );
 
   return {
-    updateFilter,
     applyBandpassFilter,
   };
 };
