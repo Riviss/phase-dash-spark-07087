@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DataSourcesTab from "@/components/setup/DataSourcesTab";
 import AreasTab from "@/components/setup/AreasTab";
@@ -5,6 +6,13 @@ import AlgorithmsTab from "@/components/setup/AlgorithmsTab";
 import PipelinesTab from "@/components/setup/PipelinesTab";
 
 const Setup = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "areas";
+
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value });
+  };
+
   return (
     <div className="h-full overflow-auto p-6">
       <div className="mb-6">
@@ -14,10 +22,10 @@ const Setup = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="sources" className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="mb-6">
-          <TabsTrigger value="sources">Data Sources</TabsTrigger>
           <TabsTrigger value="areas">Areas & Stations</TabsTrigger>
+          <TabsTrigger value="sources">Data Sources</TabsTrigger>
           <TabsTrigger value="algorithms">Algorithms</TabsTrigger>
           <TabsTrigger value="pipelines">Pipelines</TabsTrigger>
           <TabsTrigger value="exports">Exports</TabsTrigger>
@@ -26,12 +34,12 @@ const Setup = () => {
           <TabsTrigger value="system">System</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="sources">
-          <DataSourcesTab />
-        </TabsContent>
-
         <TabsContent value="areas">
           <AreasTab />
+        </TabsContent>
+
+        <TabsContent value="sources">
+          <DataSourcesTab />
         </TabsContent>
 
         <TabsContent value="algorithms">
