@@ -1,11 +1,13 @@
 import TrackRow, { PhasePick, ChannelFilter } from "./TrackRow";
+import StationGroup from "./StationGroup";
 
 const mockTracks = Array.from({ length: 12 }, (_, i) => {
+  const stationIdx = Math.floor(i / 3);
   const channels = ["HHZ", "HHE", "HHN"];
   return {
     id: `track-${i}`,
-    station: `STA${i.toString().padStart(3, "0")}`,
-    network: ["PQ", "XL", "EO"][i % 3],
+    station: `STA${stationIdx.toString().padStart(3, "0")}`,
+    network: ["PQ", "XL", "EO"][stationIdx % 3],
     channel: channels[i % 3],
   };
 });
@@ -22,11 +24,54 @@ const TrackStack = ({ picks, onAddPick, channelFilter, showTheoreticals, thresho
   // Filter tracks based on channel selection
   const filteredTracks = mockTracks.filter((track) => {
     if (channelFilter === "All") return true;
-    const ch = track.channel.slice(-1); // Get last char (Z, E, N)
+    const ch = track.channel.slice(-1);
     if (channelFilter === "EN") return ch === "E" || ch === "N";
     return ch === channelFilter;
   });
 
+  // Group by station when showing multiple channels
+  const shouldGroup = channelFilter === "All" || channelFilter === "EN";
+  
+  if (shouldGroup) {
+    // Group tracks by station
+    const stationGroups = filteredTracks.reduce((acc, track) => {
+      const key = `${track.network}.${track.station}`;
+      if (!acc[key]) {
+        acc[key] = {
+          station: track.station,
+          network: track.network,
+          tracks: [],
+        };
+      }
+      acc[key].tracks.push(track);
+      return acc;
+    }, {} as Record<string, { station: string; network: string; tracks: typeof filteredTracks }>);
+
+    const groups = Object.values(stationGroups);
+
+    return (
+      <div className="min-w-full">
+        {groups.map((group, index) => (
+          <div key={`${group.network}.${group.station}`}>
+            <StationGroup
+              station={group.station}
+              network={group.network}
+              tracks={group.tracks}
+              picks={picks}
+              showTheoreticals={showTheoreticals}
+              threshold={threshold}
+              onAddPick={onAddPick}
+            />
+            {index < groups.length - 1 && (
+              <div className="h-[1px] bg-track-divider" />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Single channel view - use individual TrackRow
   return (
     <div className="min-w-full">
       {filteredTracks.map((track, index) => (
