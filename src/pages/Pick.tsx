@@ -8,7 +8,8 @@ import PickInspector from "@/components/pick/PickInspector";
 import EventsRail from "@/components/pick/EventsRail";
 import PhasePicker, { PhaseType } from "@/components/pick/PhasePicker";
 import FilterControl, { FilterPreset } from "@/components/pick/FilterControl";
-import { PhasePick } from "@/components/pick/TrackRow";
+import ChannelSelector from "@/components/pick/ChannelSelector";
+import { PhasePick, ChannelFilter } from "@/components/pick/TrackRow";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -20,6 +21,9 @@ const Pick = () => {
   const [picks, setPicks] = useState<Record<string, PhasePick[]>>({});
   const [onePickMode, setOnePickMode] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterPreset | null>(null);
+  const [channelFilter, setChannelFilter] = useState<ChannelFilter>("All");
+  const [showTheoreticals, setShowTheoreticals] = useState(true);
+  const [threshold, setThreshold] = useState(0.3);
 
   const handleAddPick = (trackId: string, position: number) => {
     const newPick: PhasePick = {
@@ -50,10 +54,23 @@ const Pick = () => {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Phase selection
       if (e.key === "1") {
         setSelectedPhase("P");
       } else if (e.key === "2") {
         setSelectedPhase("S");
+      }
+      // Channel selection
+      else if (e.key.toLowerCase() === "a") {
+        setChannelFilter("All");
+      } else if (e.key.toLowerCase() === "z") {
+        setChannelFilter("Z");
+      } else if (e.key.toLowerCase() === "e") {
+        setChannelFilter("E");
+      } else if (e.key.toLowerCase() === "n") {
+        setChannelFilter("N");
+      } else if (e.key.toLowerCase() === "x") {
+        setChannelFilter("EN");
       }
     };
 
@@ -145,8 +162,18 @@ const Pick = () => {
             onPhaseSelect={setSelectedPhase}
           />
 
+          <ChannelSelector
+            selected={channelFilter}
+            onSelect={setChannelFilter}
+          />
+
           <label className="flex cursor-pointer items-center gap-1.5">
-            <input type="checkbox" className="h-3 w-3 rounded" defaultChecked />
+            <input 
+              type="checkbox" 
+              className="h-3 w-3 rounded" 
+              checked={showTheoreticals}
+              onChange={(e) => setShowTheoreticals(e.target.checked)}
+            />
             <span className="text-muted-foreground">Theoretical</span>
           </label>
 
@@ -178,7 +205,13 @@ const Pick = () => {
         {/* Track Stack */}
         <ResizablePanel defaultSize={60}>
           <div className="h-full overflow-auto">
-            <TrackStack picks={picks} onAddPick={handleAddPick} />
+            <TrackStack 
+              picks={picks} 
+              onAddPick={handleAddPick}
+              channelFilter={channelFilter}
+              showTheoreticals={showTheoreticals}
+              threshold={threshold}
+            />
           </div>
         </ResizablePanel>
 
