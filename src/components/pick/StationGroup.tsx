@@ -71,6 +71,21 @@ const StationGroup = ({
   const probs = probabilities || generateMockProbabilities(seed);
   const theo = theoreticals || generateMockTheoreticals(seed);
 
+  // Aggregate all picks for this station (from any track)
+  const stationPicks = tracks.reduce((acc, track) => {
+    const trackPicks = picks[track.id] || [];
+    trackPicks.forEach(pick => {
+      // Use position + type as key to avoid duplicates
+      const key = `${pick.type}-${Math.round(pick.position)}`;
+      if (!acc.has(key)) {
+        acc.set(key, pick);
+      }
+    });
+    return acc;
+  }, new Map<string, { type: "P" | "S"; position: number; id: string }>());
+
+  const aggregatedPicks = Array.from(stationPicks.values());
+
   const handleWaveformClick = (trackId: string) => (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const position = ((e.clientX - rect.left) / rect.width) * 100;
@@ -160,7 +175,6 @@ const StationGroup = ({
       <div className="relative flex-1 flex flex-col">
         {/* Waveform Lanes - one per channel */}
         {tracks.map((track, idx) => {
-          const trackPicks = picks[track.id] || [];
           return (
             <div
               key={track.id}
@@ -190,8 +204,8 @@ const StationGroup = ({
                 />
               </svg>
 
-              {/* Phase Pick Markers */}
-              {trackPicks.map((pick) => (
+              {/* Phase Pick Markers - aligned across all channels */}
+              {aggregatedPicks.map((pick) => (
                 <div
                   key={pick.id}
                   className="absolute top-0 h-full pointer-events-none"
@@ -201,15 +215,18 @@ const StationGroup = ({
                     className="absolute top-0 h-full w-0.5 opacity-90"
                     style={{ backgroundColor: phaseColors[pick.type] }}
                   />
-                  <div
-                    className="absolute top-0.5 -translate-x-1/2 flex items-center rounded px-0.5 text-[8px] font-mono-data font-semibold shadow-sm"
-                    style={{
-                      backgroundColor: phaseColors[pick.type],
-                      color: "hsl(var(--background))",
-                    }}
-                  >
-                    {pick.type}
-                  </div>
+                  {/* Only show label on first track */}
+                  {idx === 0 && (
+                    <div
+                      className="absolute top-0.5 -translate-x-1/2 flex items-center rounded px-0.5 text-[8px] font-mono-data font-semibold shadow-sm"
+                      style={{
+                        backgroundColor: phaseColors[pick.type],
+                        color: "hsl(var(--background))",
+                      }}
+                    >
+                      {pick.type}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
