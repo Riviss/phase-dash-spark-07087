@@ -36,22 +36,18 @@ const Pick = () => {
       id: `${stationId}-${selectedPhase}-${Date.now()}`,
     };
     
-    console.log("Adding pick:", { stationId, position, selectedPhase, newPick });
-    
     setPicks((prev) => {
-      // If one pick mode is enabled, clear ALL existing picks of the same type across all stations
+      const existingPicks = prev[stationId] || [];
+      
+      // If one pick mode is enabled, replace existing pick of same type for THIS station only
       if (onePickMode) {
-        const cleared: Record<string, PhasePick[]> = {};
-        Object.entries(prev).forEach(([key, pickList]) => {
-          cleared[key] = pickList.filter(pick => pick.type !== selectedPhase);
-        });
+        const filteredPicks = existingPicks.filter(pick => pick.type !== selectedPhase);
         return {
-          ...cleared,
-          [stationId]: [...(cleared[stationId] || []), newPick],
+          ...prev,
+          [stationId]: [...filteredPicks, newPick],
         };
       }
       
-      const existingPicks = prev[stationId] || [];
       return {
         ...prev,
         [stationId]: [...existingPicks, newPick],
