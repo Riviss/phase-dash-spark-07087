@@ -30,6 +30,7 @@ interface StationGroupProps {
   threshold: number;
   onAddPick: (trackId: string, position: number) => void;
   activeFilter?: FilterPreset | null;
+  zoom?: number;
 }
 
 const phaseColors = {
@@ -70,6 +71,7 @@ const StationGroup = ({
   threshold,
   onAddPick,
   activeFilter = null,
+  zoom = 100,
 }: StationGroupProps) => {
   const seed = parseInt(station.replace(/\D/g, '')) || 0;
   const probs = probabilities || generateMockProbabilities(seed);

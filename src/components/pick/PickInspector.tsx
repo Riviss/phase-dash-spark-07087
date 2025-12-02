@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import MiniMap from "./MiniMap";
 
 const PickInspector = () => {
   return (
@@ -68,7 +69,13 @@ const PickInspector = () => {
             <CardTitle className="text-sm">Map</CardTitle>
           </CardHeader>
           <CardContent className="p-3 pt-0">
-            <div className="aspect-square rounded bg-muted/30" />
+            <MiniMap 
+              eventLat={51.5}
+              eventLon={-114.5}
+              stationLat={51.8}
+              stationLon={-114.2}
+              className="rounded"
+            />
           </CardContent>
         </Card>
       </div>

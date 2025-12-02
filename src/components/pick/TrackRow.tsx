@@ -33,7 +33,10 @@ interface TrackRowProps {
   threshold?: number; // 0-1
   onAddPick?: (trackId: string, position: number) => void;
   activeFilter?: FilterPreset | null;
+  zoom?: number;
 }
+
+export type { TrackRowProps };
 
 const phaseColors = {
   P: "hsl(var(--rail-p))",

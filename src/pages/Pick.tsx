@@ -25,6 +25,7 @@ const Pick = () => {
   const [showTheoreticals, setShowTheoreticals] = useState(true);
   const [threshold, setThreshold] = useState(0.3);
   const [selectedEventId, setSelectedEventId] = useState(mockEvents[0]?.id || "");
+  const [zoom, setZoom] = useState(100);
 
   const selectedEvent = mockEvents.find(e => e.id === selectedEventId);
 
@@ -214,6 +215,7 @@ const Pick = () => {
               showTheoreticals={showTheoreticals}
               threshold={threshold}
               activeFilter={activeFilter}
+              zoom={zoom}
             />
           </div>
         </ResizablePanel>
@@ -266,12 +268,14 @@ const Pick = () => {
         <div className="flex flex-1 items-center gap-3">
           <span className="text-xs text-muted-foreground">Zoom:</span>
           <Slider
-            defaultValue={[50]}
-            max={100}
-            step={1}
+            value={[zoom]}
+            onValueChange={(v) => setZoom(v[0])}
+            min={50}
+            max={400}
+            step={10}
             className="w-32"
           />
-          <span className="font-mono-data text-xs">150%</span>
+          <span className="font-mono-data text-xs">{zoom}%</span>
         </div>
 
         <div className="flex items-center gap-2">
