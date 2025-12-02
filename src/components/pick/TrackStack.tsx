@@ -20,9 +20,10 @@ interface TrackStackProps {
   showTheoreticals: boolean;
   threshold: number;
   activeFilter: FilterPreset | null;
+  zoom: number;
 }
 
-const TrackStack = ({ picks, onAddPick, channelFilter, showTheoreticals, threshold, activeFilter }: TrackStackProps) => {
+const TrackStack = ({ picks, onAddPick, channelFilter, showTheoreticals, threshold, activeFilter, zoom }: TrackStackProps) => {
   // Filter tracks based on channel selection
   const filteredTracks = mockTracks.filter((track) => {
     if (channelFilter === "All") return true;
@@ -52,7 +53,7 @@ const TrackStack = ({ picks, onAddPick, channelFilter, showTheoreticals, thresho
     const groups = Object.values(stationGroups);
 
     return (
-      <div className="min-w-full">
+      <div style={{ width: `${zoom}%`, minWidth: '100%' }}>
         {groups.map((group, index) => (
           <div key={`${group.network}.${group.station}`}>
             <StationGroup
@@ -64,6 +65,7 @@ const TrackStack = ({ picks, onAddPick, channelFilter, showTheoreticals, thresho
               threshold={threshold}
               onAddPick={onAddPick}
               activeFilter={activeFilter}
+              zoom={zoom}
             />
             {index < groups.length - 1 && (
               <div className="h-[1px] bg-track-divider" />
@@ -76,7 +78,7 @@ const TrackStack = ({ picks, onAddPick, channelFilter, showTheoreticals, thresho
 
   // Single channel view - use individual TrackRow
   return (
-    <div className="min-w-full">
+    <div style={{ width: `${zoom}%`, minWidth: '100%' }}>
       {filteredTracks.map((track, index) => (
         <div key={track.id}>
           <TrackRow
@@ -86,6 +88,7 @@ const TrackStack = ({ picks, onAddPick, channelFilter, showTheoreticals, thresho
             showTheoreticals={showTheoreticals}
             threshold={threshold}
             activeFilter={activeFilter}
+            zoom={zoom}
           />
           {index < filteredTracks.length - 1 && (
             <div className="h-[1px] bg-track-divider" />
