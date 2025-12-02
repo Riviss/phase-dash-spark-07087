@@ -1,11 +1,21 @@
+import { useState } from "react";
 import { Clock, Wifi, Zap, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import StationGrid from "@/components/live/StationGrid";
 import HotspotTimeline from "@/components/live/HotspotTimeline";
+import FilterControls from "@/components/live/FilterControls";
+import { FilterSettings } from "@/hooks/useAudioFilter";
 
 const Live = () => {
   const currentUTC = new Date().toISOString().split(".")[0] + "Z";
+
+  // Default filter: 8Hz center ± 7Hz = 1-15Hz bandpass
+  const [filterSettings, setFilterSettings] = useState<FilterSettings>({
+    centerFreq: 8,
+    bandwidth: 7,
+    enabled: true,
+  });
 
   return (
     <div className="flex h-full flex-col">
@@ -41,12 +51,17 @@ const Live = () => {
         </div>
       </div>
 
+      {/* Filter Controls */}
+      <div className="flex items-center gap-4 border-b border-border bg-card/50 px-4 py-2">
+        <FilterControls settings={filterSettings} onChange={setFilterSettings} />
+      </div>
+
       {/* Hotspot Timeline Strip */}
       <div className="border-b border-border bg-card p-4">
         <Card className="border-0">
           <CardHeader className="p-3">
             <CardTitle className="text-xs font-medium text-muted-foreground">
-              Event Brightness (Σ P+S)
+              Event Brightness (Σ P+S) - Click bin to view picks
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 pt-0">
@@ -57,7 +72,7 @@ const Live = () => {
 
       {/* Station Grid */}
       <div className="flex-1 overflow-auto p-4">
-        <StationGrid />
+        <StationGrid filterSettings={filterSettings} />
       </div>
     </div>
   );

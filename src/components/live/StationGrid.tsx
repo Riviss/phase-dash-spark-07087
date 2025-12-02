@@ -1,6 +1,17 @@
+import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { AlertCircle, CheckCircle } from "lucide-react";
+import CanvasWaveform from "./CanvasWaveform";
+import { FilterSettings } from "@/hooks/useAudioFilter";
+import useAudioFilter from "@/hooks/useAudioFilter";
+
+// Generate mock waveform data
+const generateWaveformData = (length: number = 200): number[] => {
+  return Array.from({ length }, (_, i) => {
+    return Math.sin(i / 5) * 0.5 + Math.sin(i / 2) * 0.3 + (Math.random() - 0.5) * 0.4;
+  });
+};
 
 const mockStations = Array.from({ length: 50 }, (_, i) => ({
   id: `STA${i.toString().padStart(3, "0")}`,
@@ -8,12 +19,27 @@ const mockStations = Array.from({ length: 50 }, (_, i) => ({
   status: i % 7 === 0 ? "warning" : "ok",
   latency: Math.floor(Math.random() * 200) + 20,
   lastSample: new Date(Date.now() - Math.random() * 60000),
+  waveformData: generateWaveformData(),
 }));
 
-const StationGrid = () => {
+interface StationGridProps {
+  filterSettings: FilterSettings;
+}
+
+const StationGrid = ({ filterSettings }: StationGridProps) => {
+  const { applyBandpassFilter } = useAudioFilter(100);
+
+  // Memoize filtered data for all stations
+  const filteredStations = useMemo(() => {
+    return mockStations.map((station) => ({
+      ...station,
+      displayData: applyBandpassFilter(station.waveformData, filterSettings),
+    }));
+  }, [filterSettings, applyBandpassFilter]);
+
   return (
     <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-      {mockStations.map((station) => (
+      {filteredStations.map((station) => (
         <Card
           key={station.id}
           className="cursor-pointer border-border bg-card transition-colors hover:border-primary/50"
@@ -36,24 +62,13 @@ const StationGrid = () => {
               </span>
             </div>
 
-            {/* Mini Waveform Sparkline */}
+            {/* Canvas Waveform */}
             <div className="mb-2 h-12 overflow-hidden rounded bg-muted/30">
-              <svg
-                width="100%"
-                height="100%"
-                viewBox="0 0 100 48"
-                preserveAspectRatio="none"
+              <CanvasWaveform
+                data={station.displayData}
+                height={48}
                 className="stroke-waveform"
-              >
-                <polyline
-                  fill="none"
-                  strokeWidth="1"
-                  points={Array.from({ length: 100 }, (_, i) => {
-                    const y = 24 + Math.sin(i / 5) * 10 + Math.random() * 4;
-                    return `${i},${y}`;
-                  }).join(" ")}
-                />
-              </svg>
+              />
             </div>
 
             {/* Mini Rails */}
