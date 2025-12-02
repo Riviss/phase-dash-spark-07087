@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import TrackStack from "@/components/pick/TrackStack";
 import PickInspector from "@/components/pick/PickInspector";
-import EventsRail from "@/components/pick/EventsRail";
+import EventsRail, { mockEvents } from "@/components/pick/EventsRail";
 import PhasePicker, { PhaseType } from "@/components/pick/PhasePicker";
 import FilterControl, { FilterPreset } from "@/components/pick/FilterControl";
 import ChannelSelector from "@/components/pick/ChannelSelector";
@@ -24,30 +24,37 @@ const Pick = () => {
   const [channelFilter, setChannelFilter] = useState<ChannelFilter>("All");
   const [showTheoreticals, setShowTheoreticals] = useState(true);
   const [threshold, setThreshold] = useState(0.3);
+  const [selectedEventId, setSelectedEventId] = useState(mockEvents[0]?.id || "");
 
-  const handleAddPick = (trackId: string, position: number) => {
+  const selectedEvent = mockEvents.find(e => e.id === selectedEventId);
+
+  const handleAddPick = (stationId: string, position: number) => {
     const newPick: PhasePick = {
       type: selectedPhase,
       position,
-      id: `${trackId}-${selectedPhase}-${Date.now()}`,
+      id: `${stationId}-${selectedPhase}-${Date.now()}`,
     };
     
-    console.log("Adding pick:", { trackId, position, selectedPhase, newPick });
+    console.log("Adding pick:", { stationId, position, selectedPhase, newPick });
     
     setPicks((prev) => {
-      const existingPicks = prev[trackId] || [];
+      // If one pick mode is enabled, clear ALL existing picks of the same type across all stations
+      if (onePickMode) {
+        const cleared: Record<string, PhasePick[]> = {};
+        Object.entries(prev).forEach(([key, pickList]) => {
+          cleared[key] = pickList.filter(pick => pick.type !== selectedPhase);
+        });
+        return {
+          ...cleared,
+          [stationId]: [...(cleared[stationId] || []), newPick],
+        };
+      }
       
-      // If one pick mode is enabled, filter out existing picks of the same type
-      const filteredPicks = onePickMode
-        ? existingPicks.filter(pick => pick.type !== selectedPhase)
-        : existingPicks;
-      
-      const updated = {
+      const existingPicks = prev[stationId] || [];
+      return {
         ...prev,
-        [trackId]: [...filteredPicks, newPick],
+        [stationId]: [...existingPicks, newPick],
       };
-      console.log("Updated picks state:", updated);
-      return updated;
     });
   };
 
@@ -121,39 +128,31 @@ const Pick = () => {
       <div className="flex items-center gap-6 border-b border-border bg-card px-4 py-2 text-xs">
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">Event:</span>
-          <span className="font-mono-data font-medium">2024-01-15 14:23:42</span>
+          <span className="font-mono-data font-medium">
+            {selectedEvent ? new Date(selectedEvent.time).toLocaleString() : "No event selected"}
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">M</span>
           <Badge variant="secondary" className="font-mono-data text-xs">
-            2.8
+            {selectedEvent?.magnitude.toFixed(1) || "-"}
           </Badge>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">Depth:</span>
-          <span className="font-mono-data">4.2 km</span>
+          <span className="font-mono-data">{selectedEvent?.depth.toFixed(1) || "-"} km</span>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">RMS:</span>
-          <span className="font-mono-data">0.12s</span>
+          <span className="text-muted-foreground">Location:</span>
+          <span className="font-mono-data">{selectedEvent?.location || "-"}</span>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Gap:</span>
-          <span className="font-mono-data">85°</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">H-Err:</span>
-          <span className="font-mono-data">±0.8 km</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Z-Err:</span>
-          <span className="font-mono-data">±1.2 km</span>
+          <span className="text-muted-foreground">Picks:</span>
+          <span className="font-mono-data">{selectedEvent?.picks || "-"}</span>
         </div>
 
         <div className="ml-auto flex items-center gap-3">
@@ -197,7 +196,10 @@ const Pick = () => {
       <ResizablePanelGroup direction="horizontal" className="flex-1">
         {/* Events Rail */}
         <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-          <EventsRail />
+          <EventsRail 
+            selectedEventId={selectedEventId}
+            onSelectEvent={setSelectedEventId}
+          />
         </ResizablePanel>
 
         <ResizableHandle />
