@@ -1,4 +1,6 @@
 import { PhasePick } from "./TrackRow";
+import { FilterPreset } from "./FilterControl";
+import WaveformTrack from "./WaveformTrack";
 
 interface Track {
   id: string;
@@ -27,6 +29,7 @@ interface StationGroupProps {
   showTheoreticals: boolean;
   threshold: number;
   onAddPick: (trackId: string, position: number) => void;
+  activeFilter?: FilterPreset | null;
 }
 
 const phaseColors = {
@@ -66,6 +69,7 @@ const StationGroup = ({
   showTheoreticals,
   threshold,
   onAddPick,
+  activeFilter = null,
 }: StationGroupProps) => {
   const seed = parseInt(station.replace(/\D/g, '')) || 0;
   const probs = probabilities || generateMockProbabilities(seed);
@@ -163,64 +167,18 @@ const StationGroup = ({
       {/* Waveform + Rails Area */}
       <div className="relative flex-1 flex flex-col">
         {/* Waveform Lanes - one per channel */}
-        {tracks.map((track, idx) => {
-          return (
-            <div
-              key={track.id}
-              className={`relative overflow-hidden bg-muted/10 cursor-crosshair ${idx > 0 ? 'border-t border-track-divider/50' : ''}`}
-              style={{ height: `${waveformHeight * 4}px` }}
-              onClick={handleWaveformClick}
-            >
-              {/* Channel label */}
-              <div className="absolute left-1 top-0.5 font-mono-data text-[9px] text-muted-foreground/60 z-10">
-                {track.channel.slice(-1)}
-              </div>
-              
-              <svg
-                width="100%"
-                height="100%"
-                viewBox={`0 0 1000 ${waveformHeight * 4}`}
-                preserveAspectRatio="none"
-                className="stroke-waveform"
-              >
-                <polyline
-                  fill="none"
-                  strokeWidth="1.5"
-                  points={Array.from({ length: 1000 }, (_, i) => {
-                    const y = (waveformHeight * 2) + Math.sin(i / 20 + idx * 2) * (waveformHeight * 1.4) + Math.random() * 2;
-                    return `${i},${y}`;
-                  }).join(" ")}
-                />
-              </svg>
-
-              {/* Phase Pick Markers - aligned across all channels */}
-              {stationPicks.map((pick) => (
-                <div
-                  key={pick.id}
-                  className="absolute top-0 h-full pointer-events-none"
-                  style={{ left: `${pick.position}%` }}
-                >
-                  <div
-                    className="absolute top-0 h-full w-0.5 opacity-90"
-                    style={{ backgroundColor: phaseColors[pick.type] }}
-                  />
-                  {/* Only show label on first track */}
-                  {idx === 0 && (
-                    <div
-                      className="absolute top-0.5 -translate-x-1/2 flex items-center rounded px-0.5 text-[8px] font-mono-data font-semibold shadow-sm"
-                      style={{
-                        backgroundColor: phaseColors[pick.type],
-                        color: "hsl(var(--background))",
-                      }}
-                    >
-                      {pick.type}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          );
-        })}
+        {tracks.map((track, idx) => (
+          <WaveformTrack
+            key={track.id}
+            track={track}
+            height={waveformHeight}
+            idx={idx}
+            activeFilter={activeFilter || null}
+            picks={stationPicks}
+            showLabel={true}
+            onClick={handleWaveformClick}
+          />
+        ))}
 
         {/* Probability Rail - Shared for station */}
         <div className="relative h-6 border-t border-track-divider bg-muted/5">

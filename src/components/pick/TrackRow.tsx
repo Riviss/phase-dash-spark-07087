@@ -1,3 +1,6 @@
+import { FilterPreset } from "./FilterControl";
+import { useWaveformData } from "@/hooks/useWaveformData";
+
 export interface PhasePick {
   type: "P" | "S";
   position: number; // percentage 0-100
@@ -29,6 +32,7 @@ interface TrackRowProps {
   showTheoreticals?: boolean;
   threshold?: number; // 0-1
   onAddPick?: (trackId: string, position: number) => void;
+  activeFilter?: FilterPreset | null;
 }
 
 const phaseColors = {
@@ -65,11 +69,15 @@ const TrackRow = ({
   theoreticals,
   showTheoreticals = true,
   threshold = 0.3,
-  onAddPick 
+  onAddPick,
+  activeFilter = null
 }: TrackRowProps) => {
+  const seed = parseInt(track.id.replace(/\D/g, '')) || 0;
+  const waveformData = useWaveformData(seed, activeFilter);
+  
   // Use provided data or generate mock
-  const probs = probabilities || generateMockProbabilities(parseInt(track.id.replace(/\D/g, '')) || 0);
-  const theo = theoreticals || generateMockTheoreticals(parseInt(track.id.replace(/\D/g, '')) || 0);
+  const probs = probabilities || generateMockProbabilities(seed);
+  const theo = theoreticals || generateMockTheoreticals(seed);
   
   const handleWaveformClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!onAddPick) return;
@@ -184,8 +192,8 @@ const TrackRow = ({
             <polyline
               fill="none"
               strokeWidth="1.5"
-              points={Array.from({ length: 1000 }, (_, i) => {
-                const y = 28 + Math.sin(i / 20) * 20 + Math.random() * 3;
+              points={waveformData.map((v, i) => {
+                const y = 28 + v * 24;
                 return `${i},${y}`;
               }).join(" ")}
             />
