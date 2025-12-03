@@ -12,7 +12,7 @@ export * from './pick';
 // Waveform types
 export * from './waveform';
 
-// Configuration types
+// Configuration types (includes AI picker program/model types)
 export * from './config';
 
 // Log types
