@@ -24,6 +24,7 @@ const Pick = () => {
   const [channelFilter, setChannelFilter] = useState<ChannelFilter>("All");
   const [showTheoreticals, setShowTheoreticals] = useState(true);
   const [threshold, setThreshold] = useState(0.3);
+  const [snapToMaxProb, setSnapToMaxProb] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState(mockEvents[0]?.id || "");
   const [zoom, setZoom] = useState(100);
 
@@ -212,6 +213,8 @@ const Pick = () => {
               threshold={threshold}
               activeFilter={activeFilter}
               zoom={zoom}
+              snapToMaxProb={snapToMaxProb}
+              selectedPhase={selectedPhase}
             />
           </div>
         </ResizablePanel>
@@ -256,7 +259,12 @@ const Pick = () => {
 
         <div className="flex items-center gap-2 text-xs">
           <span className="text-muted-foreground">Snap:</span>
-          <Button variant="outline" size="sm" className="h-6 text-xs">
+          <Button 
+            variant={snapToMaxProb ? "default" : "outline"} 
+            size="sm" 
+            className="h-6 text-xs"
+            onClick={() => setSnapToMaxProb(!snapToMaxProb)}
+          >
             Max-Prob
           </Button>
         </div>

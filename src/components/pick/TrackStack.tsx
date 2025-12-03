@@ -1,6 +1,7 @@
 import TrackRow, { PhasePick, ChannelFilter } from "./TrackRow";
 import StationGroup from "./StationGroup";
 import { FilterPreset } from "./FilterControl";
+import { PhaseType } from "./PhasePicker";
 
 const mockTracks = Array.from({ length: 12 }, (_, i) => {
   const stationIdx = Math.floor(i / 3);
@@ -13,7 +14,7 @@ const mockTracks = Array.from({ length: 12 }, (_, i) => {
   };
 });
 
-interface TrackStackProps {
+export interface TrackStackProps {
   picks: Record<string, PhasePick[]>;
   onAddPick: (trackId: string, position: number) => void;
   channelFilter: ChannelFilter;
@@ -21,9 +22,11 @@ interface TrackStackProps {
   threshold: number;
   activeFilter: FilterPreset | null;
   zoom: number;
+  snapToMaxProb?: boolean;
+  selectedPhase?: PhaseType;
 }
 
-const TrackStack = ({ picks, onAddPick, channelFilter, showTheoreticals, threshold, activeFilter, zoom }: TrackStackProps) => {
+const TrackStack = ({ picks, onAddPick, channelFilter, showTheoreticals, threshold, activeFilter, zoom, snapToMaxProb = false, selectedPhase = "P" }: TrackStackProps) => {
   // Filter tracks based on channel selection
   const filteredTracks = mockTracks.filter((track) => {
     if (channelFilter === "All") return true;
@@ -66,6 +69,8 @@ const TrackStack = ({ picks, onAddPick, channelFilter, showTheoreticals, thresho
               onAddPick={onAddPick}
               activeFilter={activeFilter}
               zoom={zoom}
+              snapToMaxProb={snapToMaxProb}
+              selectedPhase={selectedPhase}
             />
             {index < groups.length - 1 && (
               <div className="h-[1px] bg-track-divider" />
