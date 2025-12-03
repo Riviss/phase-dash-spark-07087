@@ -1,6 +1,8 @@
 import { PhasePick } from "./TrackRow";
 import { FilterPreset } from "./FilterControl";
+import { PhaseType } from "./PhasePicker";
 import WaveformTrack from "./WaveformTrack";
+import { snapToNearestPeak } from "@/hooks/useSnapToPeak";
 
 interface Track {
   id: string;
@@ -31,6 +33,8 @@ interface StationGroupProps {
   onAddPick: (trackId: string, position: number) => void;
   activeFilter?: FilterPreset | null;
   zoom?: number;
+  snapToMaxProb?: boolean;
+  selectedPhase?: PhaseType;
 }
 
 const phaseColors = {
@@ -72,6 +76,8 @@ const StationGroup = ({
   onAddPick,
   activeFilter = null,
   zoom = 100,
+  snapToMaxProb = false,
+  selectedPhase = "P",
 }: StationGroupProps) => {
   const seed = parseInt(station.replace(/\D/g, '')) || 0;
   const probs = probabilities || generateMockProbabilities(seed);
@@ -83,7 +89,17 @@ const StationGroup = ({
   
   const handleWaveformClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const position = ((e.clientX - rect.left) / rect.width) * 100;
+    let position = ((e.clientX - rect.left) / rect.width) * 100;
+    
+    // Snap to nearest peak if enabled
+    if (snapToMaxProb) {
+      const probData = selectedPhase === "P" ? probs.P : probs.S;
+      const snapResult = snapToNearestPeak(position, probData, threshold);
+      if (snapResult.snapped) {
+        position = snapResult.position;
+      }
+    }
+    
     onAddPick(stationKey, position);
   };
 
